@@ -21,6 +21,20 @@ logger = logging.getLogger(__name__)
 
 class CRUD:
     @staticmethod
+    async def _get_by_filters(
+        model: Type[ModelT],
+        session: AsyncSession,
+        filters: dict[str, object],
+    ) -> ModelT | None:
+        """Возвращает первую запись, удовлетворяющую набору equality-фильтров."""
+
+        stmt = select(model).where(
+            *[getattr(model, field) == value for field, value in filters.items()]
+        )
+        result: Result = await session.execute(stmt)
+        return result.scalars().first()
+
+    @staticmethod
     async def _get_by_id(
         model: Type[ModelT],
         session: AsyncSession,
@@ -143,6 +157,52 @@ class CRUD:
             DBErrorHandler.handle(err=err, model=model, action="creating")
         else:
             return instance
+
+    @staticmethod
+    async def get_or_create(
+        data: SchemaT,
+        model: Type[ModelT],
+        session: AsyncSession,
+        lookup_fields: tuple[str, ...],
+    ) -> tuple[ModelT, bool]:
+        """
+        Ищет запись по набору полей и создаёт её при отсутствии.
+
+        При гонке на уникальном ограничении повторно читает запись по тем же lookup-полям
+        и возвращает уже созданный конкурентным запросом объект.
+        """
+        payload = data.model_dump()
+        filters = {field: payload[field] for field in lookup_fields}
+
+        try:
+            instance = await CRUD._get_by_filters(
+                model=model,
+                session=session,
+                filters=filters,
+            )
+            if instance is not None:
+                return instance, False
+
+            instance = model(**payload)
+            session.add(instance)
+            await session.commit()
+            await session.refresh(instance)
+            return instance, True
+        except IntegrityError as err:
+            await session.rollback()
+            instance = await CRUD._get_by_filters(
+                model=model,
+                session=session,
+                filters=filters,
+            )
+            if instance is not None:
+                return instance, False
+            DBErrorHandler.handle(err=err, model=model, action="creating")
+        except HTTPException:
+            raise
+        except Exception as err:
+            await session.rollback()
+            DBErrorHandler.handle(err=err, model=model, action="creating")
 
     @staticmethod
     async def get(

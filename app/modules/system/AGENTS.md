@@ -91,6 +91,7 @@ Use it when:
 
 - the model follows the standard `Base` shape
 - operations are ordinary create/get/patch/delete flows
+- create semantics should be idempotent for one or more lookup fields
 - filtering needs are simple
 - feature-specific query optimization is not required
 
@@ -118,6 +119,30 @@ Agent expectations:
 - Keep `_get*` helpers focused on one search scenario each.
 - Preserve stable ordering for paginated list queries.
 - Keep input normalization in the public interface or in clearly named helpers.
+
+### `CRUD.get_or_create(...)` Behavior
+
+`CRUD.get_or_create(...)` is the shared path for idempotent create flows.
+
+Use it when:
+
+- a feature must treat repeated create requests as "return existing"
+- existence is determined by one or more explicit `lookup_fields`
+- the fallback behavior after a uniqueness race should stay generic
+
+Current contract:
+
+- accepts a Pydantic `data` object, a target `model`, an `AsyncSession`, and `lookup_fields`
+- returns a tuple `(instance, created)`
+- returns `(existing_instance, False)` when a matching row already exists
+- returns `(new_instance, True)` when a new row is created
+- on `IntegrityError` during insert, performs `rollback()` and re-reads by the same `lookup_fields`
+
+Agent expectations:
+
+- Keep `lookup_fields` aligned with actual uniqueness semantics at the model/database level.
+- Use `get_or_create()` from feature services, not directly from handlers, when follow-up domain actions depend on whether the row was newly created.
+- Do not add module-specific side effects into `CRUD.get_or_create()`; keep it limited to generic persistence behavior.
 
 ## Change Rules
 
