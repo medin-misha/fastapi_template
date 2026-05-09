@@ -22,4 +22,5 @@ class TelegramUser(Base, TimestampMixin):
         back_populates="telegram_user",
         uselist=False,
         lazy="selectin",
+        passive_deletes="all",
     )
