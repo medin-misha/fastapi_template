@@ -1,5 +1,5 @@
 from .system import Base, TimestampMixin
-from .telegram import TelegramUser, UserProfile
+from .telegram_module import TelegramUser, UserProfile
 
 __all__ = [
     "Base", "TimestampMixin",
