@@ -221,3 +221,11 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Scaffold-local module policy:
+# keep only the shared system module tracked in the main repository
+app/modules/*/
+!app/modules/system/
+!app/modules/system/**
+app/modules/system/**/__pycache__/
+app/modules/system/**/*.py[codz]
