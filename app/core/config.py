@@ -26,7 +26,8 @@ class MainSettings(BaseSettings):
     database_pool_recycle: int = Field(default=1800, ge=0)
 
     # RabbitMQ
-    amqp_url: str
+    rabbitmq_enabled: bool = True
+    amqp_url: str | None = None
     rabbitmq_default_exchange: str = "app.events"
     rabbitmq_default_exchange_type: str = "direct"
     rabbitmq_default_queue: str = "app.events.default"
@@ -35,6 +36,7 @@ class MainSettings(BaseSettings):
     rabbitmq_consumer_enabled: bool = True
     rabbitmq_publish_timeout: int = Field(default=5, ge=1)
     rabbitmq_reconnect_interval: int = Field(default=5, ge=1)
+    rabbitmq_debug_endpoints_enabled: bool = False
 
     # Storage
     minio_endpoint: str

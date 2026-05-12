@@ -35,21 +35,22 @@ fastapi_template/
     │   ├── config.py
     │   ├── database.py
     │   └── security.py
+    ├── lifecycle.py
     └── modules/
-        └── system/
-            ├── handlers.py
-            ├── models/
-            ├── schemas/
-            ├── services/
-            └── utils/
+        ├── system/
+        ├── rmq_module/
+        └── <feature_module>/
 ```
 
 ## Architecture Rules
 
 - Use a modular architecture.
 - Global infrastructure lives in `app/core/`.
+- Application lifecycle orchestration lives in `app/lifecycle.py`.
 - Application-wide API routing lives in `app/api/router.py`.
 - Business modules live in `app/modules/`.
+- Built-in infrastructure modules may also live in `app/modules/` when they need their own package boundary, API surface, or lifecycle contract. `rmq_module` is the canonical example.
+- Built-in modules under `app/modules/` are part of the main repository. Do not keep nested `.git` directories inside them.
 
 Each module should follow this structure:
 
@@ -86,6 +87,7 @@ Avoid:
 
 - Every module may expose its own router from `handlers.py`.
 - The central router in `app/api/router.py` should include module routers.
+- Do not wire example or test routers into production API by default.
 
 Example module router:
 
@@ -118,6 +120,7 @@ api_router.include_router(system_router)
 - Use `pydantic-settings`.
 - If you add a new environment variable or runtime setting, update `app/core/config.py` explicitly by adding the corresponding `MainSettings` field and, if needed, its default value.
 - Do not hardcode secrets, database credentials, tokens, or passwords in source code.
+- If a module needs its own explicit configuration contract, add a module-local config projection on top of `app.core.settings` instead of reading `.env` directly inside the module.
 
 Use this pattern:
 
@@ -152,6 +155,7 @@ settings = MainSettings()
 - Use `settings.database_url`.
 - Do not create database engines inside modules.
 - Do not create sessions manually inside endpoint functions. Use dependencies.
+- Do not import `aio-pika` directly in feature modules when `app.modules.rmq_module` already provides the needed capability.
 
 ## Alembic Rules
 
@@ -182,6 +186,7 @@ Avoid:
 - Circular imports
 - Business logic in routers
 - Unnecessary abstractions
+- Mixing app-level lifecycle wiring into unrelated feature modules
 
 ## Package Manager
 

@@ -7,7 +7,7 @@ from app.modules.rmq_module.handlers import router as rmq_router
 
 router = APIRouter(prefix="/api")
 
-# Сюда импортировать и подключать роутеры модулей modules/
+# Built-in infrastructure and feature routers live here.
 router.include_router(system_router)
 router.include_router(telegram_router)
 router.include_router(file_router)
