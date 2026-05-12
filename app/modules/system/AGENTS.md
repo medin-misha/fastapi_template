@@ -166,6 +166,7 @@ Avoid these changes:
 
 - Preserve backward-compatible imports from `app.modules.system` when possible.
 - If you change exported primitives, update both `__init__.py` and `README.md`.
+- If your change introduces new settings or env variables, update `app/core/config.py` explicitly and document the new configuration contract.
 - If you change `CRUD`, verify that its behavior is still generic, async-friendly, and safe for reuse.
 - If you change search or error behavior, document the new contract clearly because other modules may rely on it.
 
@@ -177,5 +178,6 @@ When working in or around this module:
 2. Reuse `Base`, `TimestampMixin`, and `CRUD` before creating parallel abstractions.
 3. Keep generic infrastructure in `system`; move business-specific logic to the owning module.
 4. Update module documentation when shared behavior changes.
+5. If the work adds configurable behavior, reflect it in `app/core/config.py`, not only in docs or `.env.example`.
 
 This module should stay small, boring, reusable, and dependable.

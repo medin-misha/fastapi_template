@@ -25,5 +25,22 @@ class MainSettings(BaseSettings):
     database_pool_timeout: int = Field(default=30, ge=1)
     database_pool_recycle: int = Field(default=1800, ge=0)
 
+    # RabbitMQ
+    amqp_url: str
+    rabbitmq_default_exchange: str = "app.events"
+    rabbitmq_default_exchange_type: str = "direct"
+    rabbitmq_default_queue: str = "app.events.default"
+    rabbitmq_default_routing_key: str = "app.events.default"
+    rabbitmq_prefetch_count: int = Field(default=10, ge=1)
+    rabbitmq_consumer_enabled: bool = True
+    rabbitmq_publish_timeout: int = Field(default=5, ge=1)
+    rabbitmq_reconnect_interval: int = Field(default=5, ge=1)
+
+    # Storage
+    minio_endpoint: str
+    minio_access_key: str
+    minio_secret_key: str
+    minio_bucket: str
+    minio_secure: bool = False
 
 settings = MainSettings()

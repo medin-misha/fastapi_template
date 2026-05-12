@@ -116,6 +116,7 @@ api_router.include_router(system_router)
 - Application settings are stored in `app/core/config.py`.
 - Settings must be loaded from the `.env` file in the project root.
 - Use `pydantic-settings`.
+- If you add a new environment variable or runtime setting, update `app/core/config.py` explicitly by adding the corresponding `MainSettings` field and, if needed, its default value.
 - Do not hardcode secrets, database credentials, tokens, or passwords in source code.
 
 Use this pattern:
@@ -229,6 +230,7 @@ Before making changes:
 - Do not rewrite large parts of the project without need
 - Do not delete files unless explicitly instructed
 - Do not modify `.env`
+- If a change introduces new configuration, update `app/core/config.py` together with the related docs and `.env.example`.
 - Do not commit secrets
 
 When uncertain, choose the simplest maintainable solution.

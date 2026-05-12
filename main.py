@@ -6,12 +6,17 @@ from fastapi import FastAPI
 from app.core import settings
 from app.api import router
 from app.core.database import database
+from app.modules.rmq_module import rmq_runtime
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    yield
-    await database.dispose()
+    await rmq_runtime.start()
+    try:
+        yield
+    finally:
+        await rmq_runtime.stop()
+        await database.dispose()
 
 
 app = FastAPI(title=settings.project_name, lifespan=lifespan)

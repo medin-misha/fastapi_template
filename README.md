@@ -1,45 +1,45 @@
 # FastAPI Template
 
-`fastapi_template` is a modular backend template for services built with:
+`fastapi_template` - это модульный backend-шаблон для сервисов на основе:
 
 - FastAPI
 - PostgreSQL
 - async SQLAlchemy
 - Alembic migrations
 - Pydantic settings
-- `uv` for dependency management
+- `uv` для управления зависимостями
 
-The repository is intentionally small. It gives you a clean foundation for new modules, shared infrastructure, and database-backed APIs without locking you into a specific product domain.
+Репозиторий намеренно остаётся компактным. Он даёт чистую основу для новых модулей, общей инфраструктуры и API с базой данных без жёсткой привязки к конкретной предметной области.
 
-## What Is Included
+## Что Уже Есть
 
-- Application entrypoint in [main.py](/home/misha/code/module_service/fastapi_template/main.py:1)
-- Central API router in [app/api/router.py](/home/misha/code/module_service/fastapi_template/app/api/router.py:1)
-- Settings loader in [app/core/config.py](/home/misha/code/module_service/fastapi_template/app/core/config.py:1)
-- Async database engine and session dependency in [app/core/database.py](/home/misha/code/module_service/fastapi_template/app/core/database.py:1)
-- Base infrastructure module in [app/modules/system/README.md](/home/misha/code/module_service/fastapi_template/app/modules/system/README.md:1)
-- Alembic configuration for schema migrations in [alembic/env.py](/home/misha/code/module_service/fastapi_template/alembic/env.py:1)
+- Точка входа приложения в [main.py](/home/misha/code/module_service/fastapi_template/main.py:1)
+- Центральный API router в [app/api/router.py](/home/misha/code/module_service/fastapi_template/app/api/router.py:1)
+- Загрузчик настроек в [app/core/config.py](/home/misha/code/module_service/fastapi_template/app/core/config.py:1)
+- Async engine базы данных и dependency для сессий в [app/core/database.py](/home/misha/code/module_service/fastapi_template/app/core/database.py:1)
+- Базовый инфраструктурный модуль в [app/modules/system/README.md](/home/misha/code/module_service/fastapi_template/app/modules/system/README.md:1)
+- Настройка Alembic для миграций схемы в [alembic/env.py](/home/misha/code/module_service/fastapi_template/alembic/env.py:1)
 
-## Current Scope
+## Текущий Объём Шаблона
 
-The template already covers:
+Сейчас шаблон уже покрывает:
 
-- modular project layout;
-- settings from `.env`;
-- async DB access with pooled connections;
-- shared ORM base classes;
-- reusable CRUD helpers;
+- модульную структуру проекта;
+- настройки из `.env`;
+- async-доступ к БД с пулом соединений;
+- общие ORM-базовые классы;
+- переиспользуемые CRUD-хелперы;
 - health-check endpoints.
 
-The following parts are present as placeholders or are intentionally not implemented yet:
+Следующие части пока либо представлены как заглушки, либо сознательно не реализованы:
 
-- [app/core/security.py](/home/misha/code/module_service/fastapi_template/app/core/security.py:1) is empty;
-- [Dockerfile](/home/misha/code/module_service/fastapi_template/Dockerfile:1) is empty;
-- there is no dedicated test setup yet.
+- [app/core/security.py](/home/misha/code/module_service/fastapi_template/app/core/security.py:1) пустой;
+- [Dockerfile](/home/misha/code/module_service/fastapi_template/Dockerfile:1) пустой;
+- отдельного тестового сетапа пока нет.
 
-If you need auth, containerization, or CI-ready tests, treat them as the next layer to add on top of this template.
+Если тебе нужны auth, контейнеризация или тесты, готовые для CI, это следующий слой, который нужно добавить поверх шаблона.
 
-## Project Structure
+## Структура Проекта
 
 ```text
 fastapi_template/
@@ -59,7 +59,7 @@ fastapi_template/
 └── README.md
 ```
 
-Recommended structure for a business module:
+Рекомендуемая структура для бизнес-модуля:
 
 ```text
 module_name/
@@ -71,19 +71,21 @@ module_name/
 └── README.md
 ```
 
-## Requirements
+## Требования
 
 - Python 3.11+
 - PostgreSQL
 - `uv`
 
-Project metadata and runtime dependencies are defined in [pyproject.toml](/home/misha/code/module_service/fastapi_template/pyproject.toml:1).
+Метаданные проекта и runtime-зависимости описаны в [pyproject.toml](/home/misha/code/module_service/fastapi_template/pyproject.toml:1).
 
-## Configuration
+## Конфигурация
 
-Settings are loaded by `pydantic-settings` from `.env` in the project root. The loader is configured in [app/core/config.py](/home/misha/code/module_service/fastapi_template/app/core/config.py:9).
+Настройки загружаются через `pydantic-settings` из `.env` в корне проекта. Загрузчик настроен в [app/core/config.py](/home/misha/code/module_service/fastapi_template/app/core/config.py:9).
 
-Example environment file:
+Если ты добавляешь новую переменную окружения или новую настройку приложения, обновляй и [app/core/config.py](/home/misha/code/module_service/fastapi_template/app/core/config.py:9), добавляя соответствующее поле в `MainSettings`. Обновить только `.env.example` или документацию недостаточно.
+
+Пример файла окружения:
 
 ```env
 debug=true
@@ -94,93 +96,94 @@ database_pool_timeout=30
 database_pool_recycle=1800
 ```
 
-Available settings:
+Доступные настройки:
 
-- `project_name`: application title shown by FastAPI; optional, defaults to `"Fast API Template"`.
-- `debug`: enables verbose error details in some infrastructure handlers.
-- `database_url`: async SQLAlchemy URL, required.
-- `database_pool_size`: base connection pool size.
-- `database_max_overflow`: extra temporary connections above the base pool.
-- `database_pool_timeout`: seconds to wait for a free DB connection.
-- `database_pool_recycle`: seconds before recycling pooled connections.
+- `project_name`: заголовок приложения в FastAPI; необязательная, по умолчанию `"Fast API Template"`.
+- `debug`: включает более подробные ошибки в некоторых инфраструктурных handlers.
+- `database_url`: async SQLAlchemy URL, обязательная.
+- `database_pool_size`: базовый размер пула соединений.
+- `database_max_overflow`: сколько дополнительных временных соединений можно открыть сверх базового пула.
+- `database_pool_timeout`: сколько секунд ждать свободное соединение.
+- `database_pool_recycle`: через сколько секунд переоткрывать соединения из пула.
 
-Use [.env.example](/home/misha/code/module_service/fastapi_template/.env.example:1) as the baseline.
+В качестве базового шаблона используй [.env.example](/home/misha/code/module_service/fastapi_template/.env.example:1).
 
-## Install And Run
+## Установка И Запуск
 
-Install dependencies:
+Установить зависимости:
 
 ```bash
 uv sync
 ```
 
-Run the application locally:
+Запустить приложение локально:
 
 ```bash
 uv run uvicorn main:app --reload
 ```
 
-The FastAPI app is created in [main.py](/home/misha/code/module_service/fastapi_template/main.py:17). On shutdown it disposes the shared SQLAlchemy engine through the `lifespan` hook.
+FastAPI-приложение создаётся в [main.py](/home/misha/code/module_service/fastapi_template/main.py:17). При остановке через `lifespan` закрывается shared SQLAlchemy engine.
 
-## API Layout
+## Структура API
 
-The central API router uses the `/api` prefix in [app/api/router.py](/home/misha/code/module_service/fastapi_template/app/api/router.py:6).
+Центральный API router использует префикс `/api` в [app/api/router.py](/home/misha/code/module_service/fastapi_template/app/api/router.py:6).
 
-Infrastructure endpoints currently available:
+Сейчас доступны следующие инфраструктурные endpoints:
 
 - `GET /api/system/health`
 - `GET /api/system/health/db`
 
-The system router is implemented in [app/modules/system/handlers.py](/home/misha/code/module_service/fastapi_template/app/modules/system/handlers.py:11).
+Системный router реализован в [app/modules/system/handlers.py](/home/misha/code/module_service/fastapi_template/app/modules/system/handlers.py:11).
 
-## Database And Sessions
+## База Данных И Сессии
 
-The shared database object is created in [app/core/database.py](/home/misha/code/module_service/fastapi_template/app/core/database.py:46).
+Общий объект базы данных создаётся в [app/core/database.py](/home/misha/code/module_service/fastapi_template/app/core/database.py:46).
 
-Important behavior:
+Важное поведение:
 
-- one async engine is created for the app process;
-- request handlers should consume `AsyncSession` through `Depends(database.get_session)`;
-- if an exception escapes the dependency scope, the session is rolled back automatically;
-- low-level SQLAlchemy errors are normalized by the infrastructure error handler used in the `system` module CRUD layer.
+- для процесса приложения создаётся один async engine;
+- handlers должны получать `AsyncSession` через `Depends(database.get_session)`;
+- если исключение выходит за пределы dependency, выполняется автоматический `rollback()`;
+- низкоуровневые SQLAlchemy-ошибки нормализуются инфраструктурным обработчиком ошибок, который используется в CRUD-слое модуля `system`.
 
-## Migrations
+## Миграции
 
-Alembic is configured for async SQLAlchemy in [alembic/env.py](/home/misha/code/module_service/fastapi_template/alembic/env.py:1).
+Alembic настроен для async SQLAlchemy в [alembic/env.py](/home/misha/code/module_service/fastapi_template/alembic/env.py:1).
 
-Apply all migrations:
+Применить все миграции:
 
 ```bash
 uv run alembic upgrade head
 ```
 
-Create a new migration after schema changes:
+Создать новую миграцию после изменения схемы:
 
 ```bash
 uv run alembic revision --autogenerate -m "describe change"
 ```
 
-### Important: How Autogenerate Sees Models
+### Важно: Как Autogenerate Видит Модели
 
-Alembic does not scan the filesystem automatically. It uses `Base.metadata`, which is imported in [alembic/env.py](/home/misha/code/module_service/fastapi_template/alembic/env.py:23) through:
+Alembic не сканирует файловую систему автоматически. Он использует `Base.metadata`, который импортируется в [alembic/env.py](/home/misha/code/module_service/fastapi_template/alembic/env.py:23) через:
 
 - [app/__init__.py](/home/misha/code/module_service/fastapi_template/app/__init__.py:1)
 - [app/modules/__init__.py](/home/misha/code/module_service/fastapi_template/app/modules/__init__.py:1)
 
-When you add a new module with ORM models, make sure its models are imported into that chain. Otherwise Alembic autogenerate will not detect the tables.
+Когда ты добавляешь новый модуль с ORM-моделями, убедись, что его модели импортированы в эту цепочку. Иначе Alembic autogenerate не увидит таблицы.
 
-## Adding A New Module
+## Добавление Нового Модуля
 
-When creating a new non-system module, use this checklist:
+Если создаёшь новый модуль, отличный от `system`, используй такой чеклист:
 
-1. Create the module directory under `app/modules/<module_name>/`.
-2. Add `handlers.py`, `models/`, `schemas/`, `services/`, and `README.md`.
-3. Define ORM models using `Base` or `Base` + `TimestampMixin` from `app.modules.system`.
-4. Export the module models through [app/modules/__init__.py](/home/misha/code/module_service/fastapi_template/app/modules/__init__.py:1) so Alembic can see them.
-5. Import and include the module router in [app/api/router.py](/home/misha/code/module_service/fastapi_template/app/api/router.py:3).
-6. Generate a migration with Alembic.
+1. Создай директорию модуля в `app/modules/<module_name>/`.
+2. Добавь `handlers.py`, `models/`, `schemas/`, `services/` и `README.md`.
+3. Описывай ORM-модели на основе `Base` или `Base` + `TimestampMixin` из `app.modules.system`.
+4. Экспортируй модели модуля через [app/modules/__init__.py](/home/misha/code/module_service/fastapi_template/app/modules/__init__.py:1), чтобы Alembic мог их увидеть.
+5. Импортируй и подключи router модуля в [app/api/router.py](/home/misha/code/module_service/fastapi_template/app/api/router.py:3).
+6. Сгенерируй миграцию через Alembic.
+7. Если модулю нужны новые настройки, добавь их в `app/core/config.py` и задокументируй в корневом README.
 
-Minimal router example:
+Минимальный пример router'а:
 
 ```python
 from fastapi import APIRouter
@@ -193,7 +196,7 @@ async def health() -> dict[str, str]:
     return {"status": "ok"}
 ```
 
-Minimal model example:
+Минимальный пример модели:
 
 ```python
 from sqlalchemy import String
@@ -206,15 +209,15 @@ class ExampleEntity(Base, TimestampMixin):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
 ```
 
-## Working Rules
+## Рабочие Правила
 
-- Keep business logic in `services/`, not in route handlers.
-- Reuse shared infrastructure from `app/core/` and `app/modules/system/`.
-- Do not create ad hoc SQLAlchemy engines inside modules.
-- Do not hardcode credentials or secrets in source code.
-- Prefer explicit imports and small focused files.
+- Держи бизнес-логику в `services/`, а не в handlers.
+- Переиспользуй общую инфраструктуру из `app/core/` и `app/modules/system/`.
+- Не создавай ad hoc SQLAlchemy engine внутри модулей.
+- Не хардкодь credentials, secrets или пароли в исходниках.
+- Предпочитай явные импорты и небольшие сфокусированные файлы.
 
-## Related Docs
+## Связанные Документы
 
 - [app/modules/system/README.md](/home/misha/code/module_service/fastapi_template/app/modules/system/README.md:1)
 - [AGENTS.md](/home/misha/code/module_service/fastapi_template/AGENTS.md:1)
