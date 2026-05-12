@@ -121,7 +121,7 @@ database_pool_recycle=1800
 - `amqp_url`: URL подключения к RabbitMQ; может быть пустым, если `rmq_module` не используется.
 - `rabbitmq_consumer_enabled`: разрешает startup фоновых consumer-listener'ов.
 - `rabbitmq_debug_endpoints_enabled`: открывает debug endpoints `POST /api/rmq/publish` и `POST /api/rmq/consume`.
-- `minio_*`: настройки встроенного `file_module`.
+- `minio_*`: настройки для отдельного файлового модуля, если он подключён поверх шаблона.
 
 В качестве базового шаблона используй [.env.example](/home/misha/code/module_service/fastapi_template/.env.example:1).
 
