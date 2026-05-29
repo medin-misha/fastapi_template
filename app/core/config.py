@@ -1,6 +1,7 @@
 from pathlib import Path
+from typing import Any
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -17,6 +18,27 @@ class MainSettings(BaseSettings):
     # Project
     project_name: str = "Fast API Template"
     debug: bool
+
+    # CORS
+    cors_origins: Any = ["*"]
+
+
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def assemble_cors_origins(cls, v: str | list[str]) -> list[str]:
+        if isinstance(v, str) and not v.startswith("["):
+            return [i.strip() for i in v.split(",") if i.strip()]
+        elif isinstance(v, str) and v.startswith("[") and v.endswith("]"):
+            import json
+            try:
+                parsed = json.loads(v)
+                if isinstance(parsed, list):
+                    return [str(i).strip() for i in parsed]
+            except Exception:
+                pass
+        elif isinstance(v, list):
+            return v
+        return v
 
     # Services
     database_url: str

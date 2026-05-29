@@ -65,9 +65,10 @@ Defines Pydantic DTO validation schemas.
 ### `services/`
 Defines the asynchronous object storage connector.
 - **S3 Client**: `services/s3_client.py`
-  - `S3Client` — Class exposing three asynchronous methods: `create`, `read`, `delete`.
+  - `S3Client` — Class exposing four asynchronous methods: `create`, `read`, `stream`, `delete`.
   - `create(file_obj: BinaryIO, filename: str, content_type: str) → str` — Streams a file directly to the S3 bucket using `aiobotocore` without loading the entire payload into server memory. File size is determined via `seek` and `tell` on the file-like object. Returns the public link.
   - `read(link: str) → bytes` — Downloads file contents from the S3 bucket by its URL. Returns raw bytes.
+  - `stream(link: str, chunk_size: int) → AsyncGenerator[bytes, None]` — Asynchronously streams chunks of a file from the S3 bucket without full buffering in memory.
   - `delete(link: str) → None` — Deletes the file from the S3 bucket by its URL.
   - `_scheme` — Property returning `"https"` or `"http"` based on `settings.minio_secure`.
   - `_key_from_link(link: str) → str` — Extracts the S3 object key from a full public bucket URL.
@@ -88,7 +89,7 @@ FastAPI router containing the endpoint routes.
   - Keep handlers thin; coordinate between services and do not put business rules inside endpoints.
   - `SessionDep` dependency uses `Annotated[AsyncSession, Depends(database.get_session)]`.
   - Upload endpoints accept `UploadFile` and an optional `Form` parameter for `note`.
-  - Download endpoints return a `StreamingResponse` with a URL-encoded `Content-Disposition` header supporting special and Cyrillic character sets.
+  - Download endpoints return a `StreamingResponse` using chunked generator `s3_client.stream` with a URL-encoded `Content-Disposition` header supporting special and Cyrillic character sets.
   - `Content-Type` headers are determined using the standard `mimetypes` library.
 
 ---
@@ -104,19 +105,19 @@ FastAPI router containing the endpoint routes.
 
 ### `GET /api/files/{id}`
 1. Queries the database using `CRUD.get(File, session, id=id)`. Throws a `404` error if the record does not exist.
-2. Downloads raw bytes from the bucket using `s3_client.read(file_record.link)`.
-3. Returns a `StreamingResponse` with appropriate MIME types and `Content-Disposition` headers.
+2. Streams chunks from the bucket using the async generator `s3_client.stream(file_record.link)`.
+3. Returns a `StreamingResponse` consuming the async generator with appropriate MIME types and `Content-Disposition` headers.
 
 ### `DELETE /api/files/{id}`
 The execution order is strict:
 1. Queries the database using `CRUD.get(File, session, id=id)` to obtain the record and extract the `link`.
-2. Deletes the database record: `session.delete(file_record)` and `session.commit()`.
-3. Deletes the object from the S3 bucket using `s3_client.delete(link)` inside a `try/except` block. If the S3 operation fails, it is logged as a warning, and the API request successfully completes.
+2. Deletes the database record: `session.delete(file_record)` and `session.flush()`.
+3. Deletes the object from the S3 bucket using `s3_client.delete(link)` inside a background task. If the S3 operation fails, it is logged as a warning, and the API request successfully completes.
 4. Returns `{"status": "ok"}`.
 
 **Rationale for Database → S3 order**:
 - If the database deletion fails, the file in the bucket remains fully intact and accessible; the state is consistent.
-- If the S3 deletion fails after the database commit, the database record is already gone. There is no broken or orphaned link exposed to the API. The orphaned object remains in the bucket and can be garbage-collected asynchronously.
+- Since the S3 deletion executes as a background task after the database commit, if the S3 deletion fails, the database record is already gone. There is no broken or orphaned link exposed to the API. The orphaned object remains in the bucket and can be garbage-collected asynchronously.
 - Bypassing this order (S3 → Database) can lead to data inconsistency. If the file is deleted from S3 first, but the database connection fails before the metadata is deleted, a broken link pointing to a non-existent asset will persist in the database.
 
 ---

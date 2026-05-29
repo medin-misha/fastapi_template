@@ -86,6 +86,7 @@ from app.modules.system import Base, TimestampMixin, CRUD
 
 - `create(file_obj, filename, content_type) → str` — стримит файл в бакет напрямую из `SpooledTemporaryFile`, без промежуточной копии в памяти; возвращает публичный URL;
 - `read(link) → bytes` — скачивает файл по URL, возвращает байты;
+- `stream(link, chunk_size) → AsyncGenerator[bytes, None]` — асинхронно стримит файл из S3 чанками без буферизации в памяти;
 - `delete(link) → None` — удаляет файл из бакета по URL.
 
 Ключ в бакете генерируется как `uuid4().hex + расширение`, что обеспечивает уникальность и совместимость с любыми именами файлов.
@@ -137,7 +138,7 @@ Router объявлен в [handlers.py](handlers.py) с префиксом `/fi
 Порядок действий:
 
 1. читает запись из БД через `CRUD.get()` — возвращает `404`, если не найдена;
-2. скачивает байты из S3 через `s3_client.read()`;
+2. стримит байты из S3 чанками через `s3_client.stream()`;
 3. определяет `Content-Type` по расширению имени файла через `mimetypes`;
 4. формирует заголовок `Content-Disposition: attachment; filename*=UTF-8''<url-encoded-name>`, что позволяет браузерам и HTTP-клиентам корректно отобразить кириллическое имя.
 

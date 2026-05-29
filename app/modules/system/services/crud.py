@@ -148,12 +148,11 @@ class CRUD:
         try:
             instance = model(**data.model_dump())
             session.add(instance)
-            await session.commit()
+            await session.flush()
             await session.refresh(instance)
         except HTTPException:
             raise
         except Exception as err:
-            await session.rollback()
             DBErrorHandler.handle(err=err, model=model, action="creating")
         else:
             return instance
@@ -183,13 +182,13 @@ class CRUD:
             if instance is not None:
                 return instance, False
 
-            instance = model(**payload)
-            session.add(instance)
-            await session.commit()
+            async with session.begin_nested():
+                instance = model(**payload)
+                session.add(instance)
+                await session.flush()
             await session.refresh(instance)
             return instance, True
         except IntegrityError as err:
-            await session.rollback()
             instance = await CRUD._get_by_filters(
                 model=model,
                 session=session,
@@ -201,7 +200,6 @@ class CRUD:
         except HTTPException:
             raise
         except Exception as err:
-            await session.rollback()
             DBErrorHandler.handle(err=err, model=model, action="creating")
 
     @staticmethod
@@ -322,14 +320,13 @@ class CRUD:
             for field, value in update_data.items():
                 setattr(instance, field, value)
 
-            await session.commit()
+            await session.flush()
             await session.refresh(instance)
 
             return instance
         except HTTPException:
             raise
         except Exception as err:
-            await session.rollback()
             DBErrorHandler.handle(err=err, model=model, action="updating")
 
     @staticmethod
@@ -365,12 +362,11 @@ class CRUD:
                 )
 
             await session.delete(instance)
-            await session.commit()
+            await session.flush()
             return "ok"
         except HTTPException:
             raise
         except Exception as err:
-            await session.rollback()
             DBErrorHandler.handle(err=err, model=model, action="deleting")
     
     @staticmethod
@@ -380,13 +376,12 @@ class CRUD:
         try:
             instances = [model(**item.model_dump()) for item in data]
             session.add_all(instances)
-            await session.commit()
+            await session.flush()
             for instance in instances:
                 await session.refresh(instance)
         except HTTPException:
             raise
         except Exception as err:
-            await session.rollback()
             DBErrorHandler.handle(err=err, model=model, action="bulk creating")
         else:
             return instances

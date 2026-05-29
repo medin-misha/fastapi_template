@@ -15,6 +15,7 @@ class RMQModuleSettings(BaseModel):
     publish_timeout: int = Field(default=5, ge=1)
     reconnect_interval: int = Field(default=5, ge=1)
     debug_endpoints_enabled: bool = False
+    debug: bool = False
 
     @property
     def configured(self) -> bool:
@@ -33,8 +34,10 @@ def build_rmq_settings(main_settings: MainSettings = settings) -> RMQModuleSetti
         consumer_enabled=main_settings.rabbitmq_consumer_enabled,
         publish_timeout=main_settings.rabbitmq_publish_timeout,
         reconnect_interval=main_settings.rabbitmq_reconnect_interval,
-        debug_endpoints_enabled=main_settings.rabbitmq_debug_endpoints_enabled,
+        debug_endpoints_enabled=main_settings.debug and main_settings.rabbitmq_debug_endpoints_enabled,
+        debug=main_settings.debug,
     )
+
 
 
 rmq_settings = build_rmq_settings()

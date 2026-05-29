@@ -4,7 +4,7 @@ import mimetypes
 from typing import Annotated
 from urllib.parse import quote
 
-from fastapi import APIRouter, Depends, Form, UploadFile, status
+from fastapi import APIRouter, Depends, Form, UploadFile, status, BackgroundTasks
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,6 +14,7 @@ from app.modules.system import CRUD
 from .models import File
 from .schemas import FileCreate, FileRead
 from .services import s3_client
+from .utils import sanitize_filename
 
 router = APIRouter(prefix="/files", tags=["Files"])
 logger = logging.getLogger(__name__)
@@ -27,7 +28,7 @@ async def upload_file(
     file: UploadFile,
     note: Annotated[str | None, Form()] = None,
 ) -> File:
-    filename = file.filename or "unnamed"
+    filename = sanitize_filename(file.filename)
     link = await s3_client.create(
         file_obj=file.file,
         filename=filename,
@@ -50,12 +51,12 @@ async def download_file(
     session: SessionDep,
 ) -> StreamingResponse:
     file_record: File = await CRUD.get(model=File, session=session, id=id)
-    data = await s3_client.read(link=file_record.link)
+    stream_gen = s3_client.stream(link=file_record.link)
 
     content_type, _ = mimetypes.guess_type(file_record.name)
     encoded_name = quote(file_record.name, safe="")
     return StreamingResponse(
-        io.BytesIO(data),
+        stream_gen,
         media_type=content_type or "application/octet-stream",
         headers={"Content-Disposition": f"attachment; filename*=UTF-8''{encoded_name}"},
     )
@@ -65,19 +66,23 @@ async def download_file(
 async def delete_file(
     id: int,
     session: SessionDep,
+    background_tasks: BackgroundTasks,
 ) -> dict[str, str]:
     file_record: File = await CRUD.get(model=File, session=session, id=id)
     link = file_record.link
 
     # DB first — transactional. If this fails, S3 file is untouched.
     await session.delete(file_record)
-    await session.commit()
+    await session.flush()
 
     # S3 after commit — best-effort. If this fails, the DB record is already
     # gone so no broken link exists; the orphaned object can be cleaned manually.
-    try:
-        await s3_client.delete(link=link)
-    except Exception:
-        logger.warning("S3 delete failed for link %s after DB record was removed", link)
+    async def delete_s3_file(s3_link: str):
+        try:
+            await s3_client.delete(link=s3_link)
+        except Exception:
+            logger.warning("S3 delete failed for link %s after DB record was removed", s3_link)
+
+    background_tasks.add_task(delete_s3_file, link)
 
     return {"status": "ok"}

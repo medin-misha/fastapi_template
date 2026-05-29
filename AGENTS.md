@@ -95,7 +95,7 @@ Acts as the central communication channel for RabbitMQ:
 - **Resiliency**: If `rabbitmq_enabled=false`, the system completely skips broker initialization during startup, allowing standalone operation.
 - **Event Publisher** (`RMQPublisher`): Publishes structured events wrapped in a standard event envelope containing `event`, `payload`, `message_id`, `correlation_id`, `timestamp`, and `source`.
 - **Consumer Registry** (`register_consumer`): Provides a decorator to register listener methods directly within business modules. Registered listeners are launched inside background tasks at startup if `rabbitmq_consumer_enabled=true`.
-- **Debug Route Support**: Provides `POST /api/rmq/publish` and `POST /api/rmq/consume` endpoints under `rabbitmq_debug_endpoints_enabled=true`.
+- **Debug Route Support**: Provides `POST /api/rmq/publish` and `POST /api/rmq/consume` endpoints under `debug=true` and `rabbitmq_debug_endpoints_enabled=true` configuration flags.
 
 ---
 

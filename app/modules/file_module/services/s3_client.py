@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import BinaryIO
+from typing import AsyncGenerator, BinaryIO
 from urllib.parse import urlparse
 from uuid import uuid4
 
@@ -64,6 +64,19 @@ class S3Client:
             )
             async with response["Body"] as stream:
                 return await stream.read()
+
+    async def stream(self, link: str, chunk_size: int = 1024 * 1024) -> AsyncGenerator[bytes, None]:
+        """Asynchronously stream chunks of a file from S3."""
+        key = self._key_from_link(link)
+
+        async with self._client() as client:
+            response = await client.get_object(
+                Bucket=settings.minio_bucket,
+                Key=key,
+            )
+            async with response["Body"] as stream:
+                while chunk := await stream.read(chunk_size):
+                    yield chunk
 
     async def delete(self, link: str) -> None:
         """Delete file from bucket by its stored link."""

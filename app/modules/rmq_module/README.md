@@ -11,7 +11,7 @@
 - регистрации consumer'ов очередей из бизнес-модулей;
 - запуска фоновых listeners при старте FastAPI;
 - предоставления RMQ health/registration endpoints;
-- предоставления debug publish/consume endpoints только по явному флагу.
+- предоставления debug publish/consume endpoints только при включенном глобальном отладочном режиме (`debug=true`) и наличии явного флага (`rabbitmq_debug_endpoints_enabled=true`).
 
 Этот модуль намеренно остаётся только transport-layer. Бизнес-сценарии должны жить в feature-модулях, а не здесь.
 
@@ -82,7 +82,7 @@ rabbitmq_debug_endpoints_enabled=false
 - если `rabbitmq_enabled=false`, built-in модуль считается выключенным;
 - если `rabbitmq_enabled=true`, но `amqp_url` не задан, publish/consume использовать нельзя;
 - если consumer-регистраций нет, lifecycle не стартует RMQ runtime на startup;
-- `POST /api/rmq/publish` и `POST /api/rmq/consume` доступны только при `rabbitmq_debug_endpoints_enabled=true`.
+- `POST /api/rmq/publish` и `POST /api/rmq/consume` доступны только в том случае, если глобальный режим отладки `debug` равен `true` **и** отладочные ручки дополнительно включены флагом `rabbitmq_debug_endpoints_enabled=true`. В иных случаях данные эндпоинты возвращают ошибку `404 Not Found`.
 
 ## Lifecycle
 
@@ -161,7 +161,7 @@ register_consumer(
 - `GET /api/rmq/health`
 - `GET /api/rmq/registrations`
 
-Только в debug-режиме модуля:
+Только в отладочном режиме (когда `debug=true` и `rabbitmq_debug_endpoints_enabled=true` в конфигурации):
 
 - `POST /api/rmq/publish`
 - `POST /api/rmq/consume`
