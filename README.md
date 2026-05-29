@@ -1,256 +1,243 @@
-# FastAPI Template
+# Контекст проекта
 
-`fastapi_template` - это модульный backend-шаблон для сервисов на основе:
+> [!NOTE]
+> Этот раздел предназначен для описания конкретного сервиса, создаваемого на базе данного шаблона. При начале разработки заполните этот блок актуальной бизнес-информацией.
 
-- FastAPI
-- PostgreSQL
-- async SQLAlchemy
-- Alembic migrations
-- Pydantic settings
-- `uv` для управления зависимостями
+### Описание сервиса
 
-Репозиторий намеренно остаётся компактным. Он даёт чистую основу для новых модулей, общей инфраструктуры и API с базой данных без жёсткой привязки к конкретной предметной области.
+[Кратко опишите назначение разрабатываемого сервиса. Какую бизнес-задачу или функционал он реализует в рамках общей архитектуры?]
 
-В шаблоне есть два уровня встроенной инфраструктуры:
+### Ключевой функционал
 
-- `app/core/` для общих process-level примитивов;
-- built-in модули в `app/modules/`, например `system` и `rmq_module`.
+- [Функция 1: например, обработка входящих заказов]
+- [Функция 2: например, генерация ежемесячных отчётов]
+- [Функция 3: например, синхронизация данных с внешней CRM]
 
-Все built-in модули в `app/modules/` должны жить в основном репозитории `fastapi_template`. Вложенные `.git` внутри модулей не являются целевой структурой для этого шаблона.
+### Окружения и ссылки
 
-## Что Уже Есть
+- **Development**: [Домен или IP-адрес стенда разработки]
+- **Production**: [Домен или IP-адрес продакшена]
 
-- Точка входа приложения в [main.py](/home/misha/code/module_service/fastapi_template/main.py:1)
-- Общий lifecycle приложения в [app/lifecycle.py](/home/misha/code/module_service/fastapi_template/app/lifecycle.py:1)
-- Центральный API router в [app/api/router.py](/home/misha/code/module_service/fastapi_template/app/api/router.py:1)
-- Загрузчик настроек в [app/core/config.py](/home/misha/code/module_service/fastapi_template/app/core/config.py:1)
-- Async engine базы данных и dependency для сессий в [app/core/database.py](/home/misha/code/module_service/fastapi_template/app/core/database.py:1)
-- Базовый инфраструктурный модуль в [app/modules/system/README.md](/home/misha/code/module_service/fastapi_template/app/modules/system/README.md:1)
-- Встроенный RabbitMQ transport-модуль в [app/modules/rmq_module/README.md](/home/misha/code/module_service/fastapi_template/app/modules/rmq_module/README.md:1)
-- Настройка Alembic для миграций схемы в [alembic/env.py](/home/misha/code/module_service/fastapi_template/alembic/env.py:1)
+### Контакты команды
 
-## Текущий Объём Шаблона
+- **Product Owner**: [Имя / Telegram]
+- **Tech Lead**: [Имя / Telegram]
+- **Разработчики**: [Имя / Telegram]
 
-Сейчас шаблон уже покрывает:
+---
 
-- модульную структуру проекта;
-- настройки из `.env`;
-- async-доступ к БД с пулом соединений;
-- общие ORM-базовые классы;
-- переиспользуемые CRUD-хелперы;
-- health-check endpoints;
-- встроенный RMQ transport layer с lifecycle-хуками и debug-инструментами.
+# Документация шаблона
 
-Следующие части пока либо представлены как заглушки, либо сознательно не реализованы:
+`fastapi_template` — это модульный backend-шаблон на базе FastAPI и PostgreSQL, спроектированный для быстрой разработки масштабируемых и изолированных сервисов.
 
-- [app/core/security.py](/home/misha/code/module_service/fastapi_template/app/core/security.py:1) пустой;
-- [Dockerfile](/home/misha/code/module_service/fastapi_template/Dockerfile:1) пустой;
-- отдельного тестового сетапа пока нет.
+## Технологический стек
 
-Если тебе нужны auth, контейнеризация или тесты, готовые для CI, это следующий слой, который нужно добавить поверх шаблона.
+- **Язык и среда**: Python 3.11+, пакетный менеджер `uv` для детерминированной сборки зависимостей.
+- **Веб-фреймворк**: FastAPI, Pydantic v2 (валидация данных), Pydantic Settings (конфигурация).
+- **База данных**: PostgreSQL, асинхронный движок SQLAlchemy 2.0.
+- **Миграции**: Alembic с полной поддержкой асинхронного режима.
+- **Объектное хранилище**: асинхронная библиотека `aiobotocore` для S3-совместимых хранилищ (MinIO, AWS S3).
+- **Очереди сообщений**: асинхронная библиотека `aio-pika` для интеграции с RabbitMQ (AMQP).
 
-## Структура Проекта
+---
+
+## Архитектура и структура проекта
+
+Шаблон реализует модульную архитектуру, обеспечивающую изоляцию логики отдельных доменов. Все сквозные инфраструктурные элементы вынесены на глобальный уровень.
+
+### Файловая структура шаблона
 
 ```text
 fastapi_template/
-├── alembic/
-├── app/
+├── alembic/                  # Скрипты и версии миграций базы данных
+├── app/                      # Исходный код приложения
 │   ├── api/
-│   │   └── router.py
-│   ├── core/
-│   │   ├── config.py
-│   │   ├── database.py
-│   │   └── security.py
-│   ├── lifecycle.py
-│   └── modules/
-│       ├── system/
-│       ├── rmq_module/
-│       └── <your_module>/
-├── main.py
-├── pyproject.toml
-└── README.md
+│   │   └── router.py         # Главный роутер, объединяющий роутеры модулей
+│   ├── core/                 # Общесистемные примитивы конфигурации и инфраструктуры
+│   │   ├── config.py         # Загрузка и валидация настроек приложения из .env
+│   │   ├── database.py       # Асинхронное подключение, сессии SQLAlchemy
+│   │   └── security.py       # Общие утилиты шифрования и авторизации
+│   ├── lifecycle.py          # Управление запуском и завершением внешних ресурсов
+│   └── modules/              # Изолированные модули
+│       ├── system/           # Общие системные примитивы и хелперы
+│       ├── rmq_module/       # Встроенная подсистема RabbitMQ
+│       └── file_module/      # Встроенный модуль файлового хранилища
+├── main.py                   # Точка входа в FastAPI-приложение
+├── pyproject.toml            # Декларация (не)зависимостей
+└── uv.lock                   # Точный слепок установленных версий библиотек
 ```
 
-Рекомендуемая структура для бизнес-модуля:
+### Стандартная структура модуля
+
+Каждая доменная область в каталоге `app/modules/` должна следовать единой структуре каталогов:
 
 ```text
-module_name/
-├── handlers.py
-├── models/
-├── schemas/
-├── services/
-├── utils/
-└── README.md
+app/modules/module_name/
+├── handlers.py               # Роутеры эндпоинтов API (FastAPI)
+├── models/                   # Определение SQLAlchemy-моделей базы данных
+├── schemas/                  # Схемы валидации запросов и ответов (Pydantic DTO)
+├── services/                 # Классы и функции бизнес-логики (сервисный слой)
+├── utils/                    # Изолированные утилиты этого конкретного модуля
+├── AGENTS.md                 # Описание зоны отвецтвенности, API, и функционала для ИИ агента (Всегда на англиском)
+└── README.md                 # Описание зоны ответственности и API модуля (Всегда на русском)
 ```
 
-## Требования
+---
 
-- Python 3.11+
-- PostgreSQL
-- `uv`
+## Назначение встроенных модулей
 
-Метаданные проекта и runtime-зависимости описаны в [pyproject.toml](/home/misha/code/module_service/fastapi_template/pyproject.toml:1).
+Шаблон поставляется с тремя базовыми модулями, которые решают ключевые инфраструктурные задачи и служат примером реализации модульного подхода.
 
-## Конфигурация
+### 1. Системный модуль (`app/modules/system`)
 
-Настройки загружаются через `pydantic-settings` из `.env` в корне проекта. Загрузчик настроен в [app/core/config.py](/home/misha/code/module_service/fastapi_template/app/core/config.py:9).
+Предоставляет базовые ORM-классы и обобщенную логику взаимодействия с СУБД:
 
-Если ты добавляешь новую переменную окружения или новую настройку приложения, обновляй и [app/core/config.py](/home/misha/code/module_service/fastapi_template/app/core/config.py:9), добавляя соответствующее поле в `MainSettings`. Обновить только `.env.example` или документацию недостаточно.
+- **Базовая модель** (`Base` в `models/base.py`): задаёт целочисленный первичный ключ `id` для всех таблиц проекта.
+- **Временные метки** (`TimestampMixin` в `models/base.py`): автоматически проставляет поля `created_at` и `updated_at` на уровне СУБД.
+- **Обобщенный CRUD-сервис** (`CRUD` в `services/crud.py`): содержит методы асинхронного создания (`create`, `bulk_create`, `get_or_create` для атомарной бесконфликтной вставки), чтения (`get` с поддержкой пагинации, сортировки, фильтрации и полнотекстового поиска), обновления (`patch`) и удаления (`delete`).
+- **Обработка ошибок базы данных** (`DBErrorHandler` в `services/errors.py`): перехватывает исключения SQLAlchemy и транслирует их в стандартные ошибки FastAPI (`HTTPException`) с логированием деталей.
+- **Health check эндпоинты**: эндпоинты проверки жизнеспособности сервиса (`GET /api/system/health`) и доступности подключения к базе данных (`GET /api/system/health/db`).
 
-Пример файла окружения:
+### 2. Файловый модуль (`app/modules/file_module`)
 
-```env
-debug=true
-database_url=postgresql+asyncpg://postgres:postgres@localhost:5432/fastapi_template
-database_pool_size=5
-database_max_overflow=10
-database_pool_timeout=30
-database_pool_recycle=1800
-```
+Реализует полный цикл управления пользовательскими и системными файлами:
 
-Доступные настройки:
+- **Асинхронная S3-интеграция** (`S3Client` в `services/s3_client.py`): стримит файлы напрямую в бакет из объекта `SpooledTemporaryFile` без временного сохранения на локальный диск сервера. Уникальные имена файлов генерируются в формате `UUID`.
+- **Метаданные файлов**: сохраняет метаданные каждого файла (оригинальное имя, ссылка, заметка) в таблице `files` в PostgreSQL.
+- **API эндпоинты**:
+  - `POST /api/files/` — загрузка файлов через multipart/form-data. При сбое транзакции СУБД загруженный в S3 файл автоматически удаляется.
+  - `GET /api/files/{id}` — стриминг файла с оригинальным именем (включая поддержку кириллицы) в заголовке `Content-Disposition`.
+  - `DELETE /api/files/{id}` — транзакционное удаление метаданных из базы данных с последующей очисткой объектного хранилища.
 
-- `project_name`: заголовок приложения в FastAPI; необязательная, по умолчанию `"Fast API Template"`.
-- `debug`: включает более подробные ошибки в некоторых инфраструктурных handlers.
-- `database_url`: async SQLAlchemy URL, обязательная.
-- `database_pool_size`: базовый размер пула соединений.
-- `database_max_overflow`: сколько дополнительных временных соединений можно открыть сверх базового пула.
-- `database_pool_timeout`: сколько секунд ждать свободное соединение.
-- `database_pool_recycle`: через сколько секунд переоткрывать соединения из пула.
-- `rabbitmq_enabled`: включает встроенный `rmq_module` как часть приложения.
-- `amqp_url`: URL подключения к RabbitMQ; может быть пустым, если `rmq_module` не используется.
-- `rabbitmq_consumer_enabled`: разрешает startup фоновых consumer-listener'ов.
-- `rabbitmq_debug_endpoints_enabled`: открывает debug endpoints `POST /api/rmq/publish` и `POST /api/rmq/consume`.
-- `minio_*`: настройки для отдельного файлового модуля, если он подключён поверх шаблона.
+### 3. Модуль интеграции очередей (`app/modules/rmq_module`)
 
-В качестве базового шаблона используй [.env.example](/home/misha/code/module_service/fastapi_template/.env.example:1).
+Служит единой точкой подключения и обмена сообщениями через RabbitMQ:
 
-## Установка И Запуск
+- **Отказоустойчивость**: при выключенном RabbitMQ (`rabbitmq_enabled=false`) приложение продолжает полноценно работать, пропуская инициализацию брокера в жизненном цикле.
+- **Публикация сообщений** (`RMQPublisher`): асинхронно отправляет структурированные сообщения, оборачивая полезную нагрузку в стандартный конверт с метаданными (`message_id`, `correlation_id`, `timestamp`, `source`).
+- **Подписка на очереди** (`register_consumer`): предоставляет декларативный декоратор для регистрации функций-обработчиков событий непосредственно внутри ваших модулей.
+- **Отладка**: предоставляет отладочные ручки (`POST /api/rmq/publish`, `POST /api/rmq/consume`) для локального тестирования и ручной отправки сообщений, доступные при активации `rabbitmq_debug_endpoints_enabled=true`.
 
-Установить зависимости:
+---
+
+## Инструкция по созданию новых модулей
+
+Для добавления нового функционального домена или интеграции выполните следующие шаги.
+
+### Шаг 1. Создание каталога и файлов
+
+Создайте каталог в `app/modules/<module_name>/` со стандартной структурой файлов:
 
 ```bash
-uv sync
+mkdir -p app/modules/billing/{models,schemas,services,utils}
+touch app/modules/billing/{__init__.py,handlers.py,README.md}
+touch app/modules/billing/models/__init__.py
+touch app/modules/billing/schemas/__init__.py
+touch app/modules/billing/services/__init__.py
 ```
 
-Запустить приложение локально:
+### Шаг 2. Разработка модели БД
+
+Опишите модель, унаследовав её от `Base` и при необходимости можете использовать системные миксины см app/modules/system/:
+
+```python
+# app/modules/billing/models/invoice.py
+from sqlalchemy import Numeric, String
+from sqlalchemy.orm import Mapped, mapped_column
+from app.modules.system import Base, TimestampMixin
+
+class Invoice(Base, TimestampMixin):
+    __tablename__ = "invoices"
+
+    amount: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
+    currency: Mapped[str] = mapped_column(String(3), default="RUB")
+```
+
+### Шаг 3. Регистрация модели в Alembic
+
+Для того чтобы Alembic мог автоматически отслеживать изменения схемы и генерировать миграции, импортируйте вашу новую модель в [app/modules/\_\_init\_\_.py](app/modules/__init__.py):
+
+```python
+from .system import Base, TimestampMixin
+from .file_module import File
+from .billing.models.invoice import Invoice  # Добавленный импорт
+
+__all__ = [
+    "Base",
+    "TimestampMixin",
+    "File",
+    "Invoice",
+]
+```
+
+### Шаг 4. Реализация API эндпоинтов
+
+Опишите ручки в `handlers.py`, используя зависимости для получения сессии базы данных:
+
+```python
+# app/modules/billing/handlers.py
+from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.core.database import database
+from app.modules.system import CRUD
+from .models.invoice import Invoice
+
+router = APIRouter(prefix="/billing", tags=["Billing"])
+
+@router.get("/invoices/{id}")
+async def get_invoice(id: int, session: AsyncSession = Depends(database.get_session)):
+    return await CRUD.get(model=Invoice, session=session, id=id)
+```
+
+### Шаг 5. Подключение роутера к приложению
+
+Импортируйте созданный роутер и включите его в центральный роутер в [app/api/router.py](app/api/router.py):
+
+```python
+from app.modules.billing.handlers import router as billing_router
+
+# ...
+router.include_router(billing_router)
+```
+
+### Шаг 6. Генерация и применение миграций СУБД
+
+Создайте новую миграцию Alembic и обновите базу данных:
 
 ```bash
-uv run uvicorn main:app --reload
+uv run alembic revision --autogenerate -m "add invoice model"
+uv run alembic upgrade head
 ```
 
-FastAPI-приложение создаётся в [main.py](/home/misha/code/module_service/fastapi_template/main.py:17). При остановке через `lifespan` закрывается shared SQLAlchemy engine.
+---
 
-Process-level startup/shutdown теперь централизован в [app/lifecycle.py](/home/misha/code/module_service/fastapi_template/app/lifecycle.py:1). Это позволяет держать built-in инфраструктурные runtime-компоненты вне `main.py`.
+## Быстрый старт для разработчика
 
-## Структура API
+### Инициализация окружения
 
-Центральный API router использует префикс `/api` в [app/api/router.py](/home/misha/code/module_service/fastapi_template/app/api/router.py:6).
+1. Установите зависимости проекта:
+   ```bash
+   uv sync
+   ```
+2. Скопируйте и настройте файл конфигурации окружения:
+   ```bash
+   cp .env.example .env
+   ```
 
-Сейчас доступны следующие инфраструктурные endpoints:
+### Накатывание миграций
 
-- `GET /api/system/health`
-- `GET /api/system/health/db`
-- `GET /api/rmq/health`
-- `GET /api/rmq/registrations`
-
-Системный router реализован в [app/modules/system/handlers.py](/home/misha/code/module_service/fastapi_template/app/modules/system/handlers.py:11).
-RabbitMQ router реализован в [app/modules/rmq_module/handlers.py](/home/misha/code/module_service/fastapi_template/app/modules/rmq_module/handlers.py:1).
-
-`POST /api/rmq/publish` и `POST /api/rmq/consume` считаются debug-only и доступны только когда включён `rabbitmq_debug_endpoints_enabled=true`.
-
-## База Данных И Сессии
-
-Общий объект базы данных создаётся в [app/core/database.py](/home/misha/code/module_service/fastapi_template/app/core/database.py:46).
-
-Важное поведение:
-
-- для процесса приложения создаётся один async engine;
-- handlers должны получать `AsyncSession` через `Depends(database.get_session)`;
-- если исключение выходит за пределы dependency, выполняется автоматический `rollback()`;
-- низкоуровневые SQLAlchemy-ошибки нормализуются инфраструктурным обработчиком ошибок, который используется в CRUD-слое модуля `system`.
-
-## Миграции
-
-Alembic настроен для async SQLAlchemy в [alembic/env.py](/home/misha/code/module_service/fastapi_template/alembic/env.py:1).
-
-Применить все миграции:
+Примените актуальную схему базы данных:
 
 ```bash
 uv run alembic upgrade head
 ```
 
-Создать новую миграцию после изменения схемы:
+### Локальный запуск
+
+Запустите сервер разработки FastAPI:
 
 ```bash
-uv run alembic revision --autogenerate -m "describe change"
+uv run uvicorn main:app --reload
 ```
 
-### Важно: Как Autogenerate Видит Модели
-
-Alembic не сканирует файловую систему автоматически. Он использует `Base.metadata`, который импортируется в [alembic/env.py](/home/misha/code/module_service/fastapi_template/alembic/env.py:23) через:
-
-- [app/__init__.py](/home/misha/code/module_service/fastapi_template/app/__init__.py:1)
-- [app/modules/__init__.py](/home/misha/code/module_service/fastapi_template/app/modules/__init__.py:1)
-
-Когда ты добавляешь новый модуль с ORM-моделями, убедись, что его модели импортированы в эту цепочку. Иначе Alembic autogenerate не увидит таблицы.
-
-## Добавление Нового Модуля
-
-Если создаёшь новый модуль, отличный от `system`, используй такой чеклист:
-
-1. Создай директорию модуля в `app/modules/<module_name>/`.
-2. Добавь `handlers.py`, `models/`, `schemas/`, `services/` и `README.md`.
-3. Описывай ORM-модели на основе `Base` или `Base` + `TimestampMixin` из `app.modules.system`.
-4. Экспортируй модели модуля через [app/modules/__init__.py](/home/misha/code/module_service/fastapi_template/app/modules/__init__.py:1), чтобы Alembic мог их увидеть.
-5. Импортируй и подключи router модуля в [app/api/router.py](/home/misha/code/module_service/fastapi_template/app/api/router.py:3).
-6. Сгенерируй миграцию через Alembic.
-7. Если модулю нужны новые настройки, добавь их в `app/core/config.py` и задокументируй в корневом README.
-
-Если модуль является встроенной инфраструктурой уровня приложения, как `rmq_module`, дополнительно:
-
-1. держи его в собственной директории внутри `app/modules/`;
-2. не тащи generic-transport логику в `system`, если она не относится ко всем модулям одинаково;
-3. подключай startup/shutdown через `app/lifecycle.py`, а не напрямую из `main.py`;
-4. явно отделяй production API от debug API.
-
-Минимальный пример router'а:
-
-```python
-from fastapi import APIRouter
-
-router = APIRouter(prefix="/example", tags=["example"])
-
-
-@router.get("/health")
-async def health() -> dict[str, str]:
-    return {"status": "ok"}
-```
-
-Минимальный пример модели:
-
-```python
-from sqlalchemy import String
-from sqlalchemy.orm import Mapped, mapped_column
-
-from app.modules.system import Base, TimestampMixin
-
-
-class ExampleEntity(Base, TimestampMixin):
-    name: Mapped[str] = mapped_column(String(255), nullable=False)
-```
-
-## Рабочие Правила
-
-- Держи бизнес-логику в `services/`, а не в handlers.
-- Переиспользуй общую инфраструктуру из `app/core/` и `app/modules/system/`.
-- Для RabbitMQ используй `app.modules.rmq_module`, а не прямой импорт `aio-pika` в feature-модулях.
-- Не создавай ad hoc SQLAlchemy engine внутри модулей.
-- Не хардкодь credentials, secrets или пароли в исходниках.
-- Предпочитай явные импорты и небольшие сфокусированные файлы.
-
-## Связанные Документы
-
-- [app/modules/system/README.md](/home/misha/code/module_service/fastapi_template/app/modules/system/README.md:1)
-- [app/modules/rmq_module/README.md](/home/misha/code/module_service/fastapi_template/app/modules/rmq_module/README.md:1)
-- [AGENTS.md](/home/misha/code/module_service/fastapi_template/AGENTS.md:1)
+Документация Swagger станет доступна по адресу `http://localhost:8000/docs`.

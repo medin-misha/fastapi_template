@@ -120,6 +120,15 @@ Agent expectations:
 - Preserve stable ordering for paginated list queries.
 - Keep input normalization in the public interface or in clearly named helpers.
 
+### `CRUD.bulk_create(...)` Behavior
+
+`CRUD.bulk_create(...)` is the shared path for batch inserting multiple records in a single transactional operation.
+
+- Accepts a list of Pydantic schemas, a target model, and an `AsyncSession`.
+- Creates instances and uses `session.add_all()` to add all instances to the session.
+- Commits the transaction and refreshes all instances so their generated database defaults (like `id`, `created_at`, `updated_at`) are available.
+- Automatically rolls back the session via `session.rollback()` and delegates database error handling to `DBErrorHandler` on failure.
+
 ### `CRUD.get_or_create(...)` Behavior
 
 `CRUD.get_or_create(...)` is the shared path for idempotent create flows.

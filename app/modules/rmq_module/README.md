@@ -190,15 +190,6 @@ register_consumer(
 
 `app/modules/test_rmq_module/` можно использовать как пример wiring для локальной отладки, но он не должен быть постоянно подключён в production API router по умолчанию.
 
-## Docker
-
-RabbitMQ поднимается через корневой `docker-compose.yml` репозитория на базе образа `rabbitmq:3-management`.
-
-Локальные порты:
-
-- `5672` для AMQP
-- `15672` для management UI
-
 ## Текущие Ограничения V1
 
 Эта версия пока не предоставляет:
