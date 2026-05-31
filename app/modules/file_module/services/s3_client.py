@@ -24,10 +24,33 @@ class S3Client:
         )
 
     def _key_from_link(self, link: str) -> str:
-        """Extract the object key from a full bucket URL."""
-        path = urlparse(link).path.lstrip("/")
-        _, key = path.split("/", 1)
-        return key
+        """Extract the object key from a full bucket URL, path, or raw key."""
+        if not link:
+            return ""
+
+        if "://" in link:
+            path = urlparse(link).path
+        else:
+            parsed = urlparse(link)
+            if parsed.scheme and not parsed.netloc and "/" in parsed.path:
+                path = "/" + parsed.path
+            else:
+                path = parsed.path or parsed.netloc or link
+
+        path = path.lstrip("/")
+
+        # 1. Check if starts with bucket name
+        bucket_prefix = f"{settings.minio_bucket}/"
+        if path.startswith(bucket_prefix):
+            return path[len(bucket_prefix):]
+
+        # 2. Check if bucket name is a segment in path
+        segments = path.split("/")
+        if settings.minio_bucket in segments:
+            idx = segments.index(settings.minio_bucket)
+            return "/".join(segments[idx + 1:])
+
+        return path
 
     async def create(self, file_obj: BinaryIO, filename: str, content_type: str) -> str:
         """Upload file to bucket. Returns public link stored in DB.
@@ -74,8 +97,9 @@ class S3Client:
                 Bucket=settings.minio_bucket,
                 Key=key,
             )
-            async with response["Body"] as stream:
-                while chunk := await stream.read(chunk_size):
+            body = response["Body"]
+            async with body:
+                while chunk := await body.read(chunk_size):
                     yield chunk
 
     async def delete(self, link: str) -> None:
