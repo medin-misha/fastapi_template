@@ -38,6 +38,7 @@
 - **Миграции**: Alembic с полной поддержкой асинхронного режима.
 - **Объектное хранилище**: асинхронная библиотека `aiobotocore` для S3-совместимых хранилищ (MinIO, AWS S3).
 - **Очереди сообщений**: асинхронная библиотека `aio-pika` для интеграции с RabbitMQ (AMQP).
+- **Отложенные задачи**: `taskiq` (broker на RabbitMQ, schedule source и result backend на Redis) для фоновых и запланированных задач.
 
 ---
 
@@ -61,6 +62,7 @@ fastapi_template/
 │   └── modules/              # Изолированные модули
 │       ├── system/           # Общие системные примитивы и хелперы
 │       ├── rmq_module/       # Встроенная подсистема RabbitMQ
+│       ├── taskiq_module/    # Инфраструктура отложенных и фоновых задач
 │       └── file_module/      # Встроенный модуль файлового хранилища
 ├── main.py                   # Точка входа в FastAPI-приложение
 ├── pyproject.toml            # Декларация (не)зависимостей
@@ -86,7 +88,7 @@ app/modules/module_name/
 
 ## Назначение встроенных модулей
 
-Шаблон поставляется с тремя базовыми модулями, которые решают ключевые инфраструктурные задачи и служат примером реализации модульного подхода.
+Шаблон поставляется с четырьмя базовыми модулями, которые решают ключевые инфраструктурные задачи и служат примером реализации модульного подхода.
 
 ### 1. Системный модуль (`app/modules/system`)
 
@@ -117,6 +119,19 @@ app/modules/module_name/
 - **Публикация сообщений** (`RMQPublisher`): асинхронно отправляет структурированные сообщения, оборачивая полезную нагрузку в стандартный конверт с метаданными (`message_id`, `correlation_id`, `timestamp`, `source`).
 - **Подписка на очереди** (`register_consumer`): предоставляет декларативный декоратор для регистрации функций-обработчиков событий непосредственно внутри ваших модулей.
 - **Отладка**: предоставляет отладочные ручки (`POST /api/rmq/publish`, `POST /api/rmq/consume`) для локального тестирования и ручной отправки сообщений, доступные при активации `rabbitmq_debug_endpoints_enabled=true`.
+
+### 4. Модуль отложенных задач (`app/modules/taskiq_module`)
+
+Предоставляет общую инфраструктуру для фоновых и отложенных задач на базе `taskiq` (исполнение через RabbitMQ, расписания и результаты — через Redis):
+
+- **Объявление задач**: любой модуль кладёт рядом `tasks.py` и декорирует функции через `@taskiq_broker.task`. Файлы `tasks.py` подхватываются автоматически (auto-discovery) — инфраструктуру менять не нужно.
+- **Обобщённое планирование**: единый API для **любой** задачи — `schedule_task_at` (на дату), `schedule_task_after` (через интервал), `schedule_task_cron` (повторяющиеся), плюс `cancel_scheduled_task` / `list_scheduled_tasks` и немедленный запуск `enqueue_task`.
+- **Строгий UTC**: всё время запуска нормализуется к UTC через `astimezone` в единственной точке `ensure_utc`; наивные (без таймзоны) даты отклоняются.
+- **Результаты задач**: подключён Redis result backend — результат `enqueue_task(...)` можно дождаться через `await task.wait_result()`.
+- **Отдельные процессы**: воркер (`taskiq worker app.modules.taskiq_module.broker:broker`) и планировщик (`taskiq scheduler app.modules.taskiq_module.scheduler:scheduler`) запускаются как отдельные процессы.
+- **Отладка**: ручки `POST /api/taskiq/schedule`, `POST /api/taskiq/schedule/after`, `GET /api/taskiq/schedules`, `DELETE /api/taskiq/schedules/{id}` доступны при `debug=true` и `taskiq_debug_endpoints_enabled=true`.
+
+Подробности — в [app/modules/taskiq_module/README.md](app/modules/taskiq_module/README.md).
 
 ---
 

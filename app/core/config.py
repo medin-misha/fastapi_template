@@ -67,4 +67,11 @@ class MainSettings(BaseSettings):
     minio_bucket: str
     minio_secure: bool = False
 
+    # taskiq
+    taskiq_enabled: bool = False
+    redis_url: str | None = None
+    taskiq_schedule_prefix: str = "schedule"
+    taskiq_debug_endpoints_enabled: bool = False
+
+
 settings = MainSettings()
