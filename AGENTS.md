@@ -103,6 +103,9 @@ Acts as the central communication channel for RabbitMQ:
 
 When tasked with adding a new feature or domain, follow this exact checklist:
 
+> [!IMPORTANT]
+> If the new module is packaged as an independent service with its own `Dockerfile`, a `.dockerignore` file **must** be created at its root directory to exclude `.venv/`, `.git/`, local `.env` files, and `__pycache__/` to avoid Docker build context pollution and virtual environment conflicts.
+
 1. **Generate the Module Directory**: Create the folder structure under `app/modules/<new_module>/`.
 2. **Define Database Models**: Write SQLAlchemy models inside `models/`, inheriting from `Base` and optionally `TimestampMixin`. You can also use other system mixins from `app/modules/system/`.
 3. **Register Models for Alembic**: Import the new model classes inside `app/modules/__init__.py`. This is critical; otherwise, Alembic autogeneration will not discover your new tables.
