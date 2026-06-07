@@ -63,7 +63,7 @@ app/modules/module_name/
 ├── schemas/                  # Pydantic models (DTOs)
 ├── services/                 # Core business logic (service layer)
 ├── utils/                    # Module-specific helper functions
-├── AGENTS.md                 # Local module instructions for AI agents (Always in English)
+├── AGENTS.md/CLAUDE.md       # Local module instructions for AI agents (Always in English)
 └── README.md                 # Local module documentation (Always in Russian)
 ```
 
